@@ -1,0 +1,9 @@
+{
+    "domain": "climate",
+    "name": "Adax WiFi Heater",
+    "documentation": "https://github.com/jonhedgerows/adax",
+    "dependencies": [],
+    "codeowners": ["@jonhedgerows"],
+    "requirements": ["voluptuous", "requests", "sanction"],
+    "homeassistant": "0.114.0"
+}
