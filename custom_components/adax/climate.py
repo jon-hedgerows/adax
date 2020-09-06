@@ -91,9 +91,9 @@ class AdaxEntity(ClimateEntity):
         """Return hvac operation i.e. heat, off mode.
         Need to be one of HVAC_MODE_*.
         """
-        if self._heater_data['heatingEnabled'] then
+        if self._heater_data['heatingEnabled']:
             return HVAC_MODE_HEAT
-        else
+        else:
             return HVAC_MODE_OFF
 
     @property
