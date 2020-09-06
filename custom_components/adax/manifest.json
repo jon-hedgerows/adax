@@ -1,5 +1,5 @@
 {
-    "domain": "climate",
+    "domain": "adax",
     "name": "Adax WiFi Heater",
     "documentation": "https://github.com/jonhedgerows/adax",
     "dependencies": [],
