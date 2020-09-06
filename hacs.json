@@ -1,5 +1,5 @@
 {
   "name": "Adax WiFi Heater Integration",
-  "domains": ["climate"],
+  "domains": ["adax"],
   "homeassistant": "0.114.0"
 }

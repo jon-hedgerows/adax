@@ -1,9 +1,10 @@
 {
     "domain": "adax",
     "name": "Adax WiFi Heater",
-    "documentation": "https://github.com/jonhedgerows/adax",
+    "documentation": "https://github.com/jon-hedgerows/adax",
     "dependencies": [],
     "codeowners": ["@jonhedgerows"],
     "requirements": ["voluptuous", "requests", "sanction"],
-    "homeassistant": "0.114.0"
+    "homeassistant": "0.114.0",
+    "config_flow": false
 }
