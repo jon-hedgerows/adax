@@ -51,8 +51,6 @@ from homeassistant.const import (
    
 from homeassistant.helpers import config_validation as cv
 
-from . import DOMAIN, PLATFORMS
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
