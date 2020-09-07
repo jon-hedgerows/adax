@@ -1,24 +1,32 @@
 """
 Adax WiFi Heater Integration for Home Assisant.
 
-By Jon Davies, based heavily on work by others
+Copyright (C) 2020 Jon Davies
 
-Tested against Home Assistant Version: [not tested yet - testing against 0.111.3]
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
-Notes:
-  The away mode set points can only be set on the thermostat.  The code below
-  prevents changing set points when in away mode so there are no surprises
-  when leaving away mode.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-Issues:
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-Ideas/Future:
+For further information please see https://github.com/jon-hedgerows/adax/
 
-Change log:
+Tested against Home Assistant Version: 0.114.3
+
+Future:
+ - switch to an async model
+ - add config flow
 
 """
 
-#import asyncio #later...
 import logging
 import voluptuous as vol
 
@@ -27,7 +35,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT, 
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
+    HVAC_MODE_AUTO,
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE
 )
@@ -36,7 +44,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE,
-    PRECISION_WHOLE
+    PRECISION_WHOLE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS
 )
    
 from homeassistant.helpers import config_validation as cv
@@ -51,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Adax thermostat."""
+    """Set up the Adax heater."""
     client_id = config[CONF_USERNAME]
     client_secret = config[CONF_PASSWORD]
 
@@ -92,7 +102,7 @@ class AdaxEntity(ClimateEntity):
         Need to be one of HVAC_MODE_*.
         """
         if self._heater_data['heatingEnabled']:
-            return HVAC_MODE_HEAT
+            return HVAC_MODE_AUTO
         else:
             return HVAC_MODE_OFF
 
@@ -101,7 +111,17 @@ class AdaxEntity(ClimateEntity):
         """Return the list of available hvac operation modes.
         Need to be a subset of HVAC_MODES.
         """
-        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        return [HVAC_MODE_AUTO, HVAC_MODE_OFF]
+
+    @property
+    def hvac_action(self):
+        """Return current hvac action."""
+        if self._heater_data['heatingEnabled']:
+            if self._heater_data['targetTemperature'] > self._heater_data['temperature']:
+                return CURRENT_HVAC_HEAT
+            else:
+                return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
 
     @property
     def temperature_unit(self):
@@ -131,7 +151,17 @@ class AdaxEntity(ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return PRECISION_WHOLE # might be able to do fractional temperatures??
+        return PRECISION_WHOLE  # HALVES and TENTHS work as well, but the app only does whole units
+
+    @property
+    def icon(self):
+        """Return icon to show if radiator is heating, not heating or set to off."""
+        if self.hvac_action == CURRENT_HVAC_HEAT:
+            return "mdi:radiator"
+        elif self.hvac_action == CURRENT_HVAC_IDLE:
+            return "mdi:radiator-disabled" # looks like a radiator not producing heat
+        else:  # should be CURRENT_HVAC_OFF
+            return "mdi:radiator-off" # looks like a crossed-out radiator
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -150,23 +180,35 @@ class AdaxEntity(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
-        if hvac_mode == HVAC_MODE_HEAT:
-            self._adax_data_handler.set_room_target_temperature(self._heater_data['id'], true, self._heater_data['temperature'])
+        if hvac_mode == HVAC_MODE_AUTO:
+            if 'targetTemperature' in self._heater_data:
+                if self._heater_data['targetTemperature'] < 5:
+                    self._heater_data['targetTemperature'] = 5
+            else:
+                self._heater_data['targetTemperature'] = 5
+            self._adax_data_handler.set_room_target_temperature(self._heater_data['id'], True, self._heater_data['targetTemperature'])
             self._adax_data_handler.update(force_update=True)
         elif hvac_mode == HVAC_MODE_OFF:
-            self._adax_data_handler.set_room_target_temperature(self._heater_data['id'], true, self._heater_data['temperature'])
+            self._adax_data_handler.set_room_target_temperature(self._heater_data['id'], False, 5)
             self._adax_data_handler.update(force_update=True)
         else:
             _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
             return
 
     def heater_turn_on(self):
-        """Turn heater toggleable device on."""
-        set_hvac_mode(self, HVAC_MODE_HEAT)
+        """Turn heater on to auto."""
+        set_hvac_mode(self, HVAC_MODE_AUTO)
 
     def heater_turn_off(self):
-        """Turn heater toggleable device off."""
+        """Turn heater off."""
         set_hvac_mode(self, HVAC_MODE_OFF)
+
+    def force_update(self):
+        """Get the latest data."""
+        for room in self._adax_data_handler.update(force_update=True):
+            if room['id'] == self._heater_data['id']:
+                self._heater_data = room
+                return
 
 
 ######
@@ -192,7 +234,7 @@ class Adax:
 
     def update(self, force_update=False):
         now = datetime.datetime.utcnow()
-        if now - self._last_updated < datetime.timedelta(minutes=30) and not force_update:
+        if now - self._last_updated < datetime.timedelta(minutes=1) and not force_update:
             return
         self._last_updated = now
         self.fetch_rooms_info()
@@ -208,8 +250,14 @@ class Adax:
         json_data = response.json()
         self._rooms =  json_data['rooms']
         for room in self._rooms:
-            room['targetTemperature'] = room['targetTemperature'] / 100.0
-            room['temperature'] = room.get('temperature', 0) / 100.0
+            if 'targetTemperature' in room:
+                room['targetTemperature'] = room['targetTemperature'] / 100.0
+            else:
+                room['targetTemperature'] = 0
+            if 'temperature' in room:
+                room['temperature'] = room.get('temperature', 0) / 100.0
+            else:
+                room['temperature'] = 0
 
     def _request(self, url, json_data=None, retry=2):
         if self._oauth_client is None:

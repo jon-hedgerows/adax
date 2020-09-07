@@ -3,7 +3,7 @@
     "name": "Adax WiFi Heater",
     "documentation": "https://github.com/jon-hedgerows/adax",
     "dependencies": [],
-    "codeowners": ["@jonhedgerows"],
+    "codeowners": ["@jon-hedgerows"],
     "requirements": ["voluptuous", "requests", "sanction"],
     "homeassistant": "0.114.0",
     "config_flow": false
