@@ -5,6 +5,8 @@ See [Adax](https://adax.no/en/wi-fi/) for compatible heaters.
 **Requirement:** You must have your heater linked to the ADAX WiFi app.
 
 ## Install with HACS
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+
 To install with HACS add https://github.com/jon-hedgerows/adax as a custom repository, and then install the Adax WiFi Heater Integration.
 
 Once you've connected your heater to the ADAX WiFi app and got it set up and working:
