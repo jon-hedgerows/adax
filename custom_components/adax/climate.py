@@ -1,9 +1,9 @@
 """
 Adax WiFi Heater Integration for Home Assisant.
 
-By Jon Davies, based on work by others
+By Jon Davies, based heavily on work by others
 
-Tested against Home Assistant Version: [not tested yet]
+Tested against Home Assistant Version: [not tested yet - testing against 0.111.3]
 
 Notes:
   The away mode set points can only be set on the thermostat.  The code below
@@ -18,7 +18,7 @@ Change log:
 
 """
 
-import asyncio
+#import asyncio #later...
 import logging
 import voluptuous as vol
 
@@ -147,6 +147,26 @@ class AdaxEntity(ClimateEntity):
             if room['id'] == self._heater_data['id']:
                 self._heater_data = room
                 return
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set hvac mode."""
+        if hvac_mode == HVAC_MODE_HEAT:
+            self._adax_data_handler.set_room_target_temperature(self._heater_data['id'], true, self._heater_data['temperature'])
+            self._adax_data_handler.update(force_update=True)
+        elif hvac_mode == HVAC_MODE_OFF:
+            self._adax_data_handler.set_room_target_temperature(self._heater_data['id'], true, self._heater_data['temperature'])
+            self._adax_data_handler.update(force_update=True)
+        else:
+            _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
+            return
+
+    def heater_turn_on(self):
+        """Turn heater toggleable device on."""
+        set_hvac_mode(self, HVAC_MODE_HEAT)
+
+    def heater_turn_off(self):
+        """Turn heater toggleable device off."""
+        set_hvac_mode(self, HVAC_MODE_OFF)
 
 
 ######

@@ -1,0 +1,35 @@
+# Describes the format for available climate services
+
+set_temperature:
+  description: Set target temperature of Adax heater.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    temperature:
+      description: New target temperature for heater in celcius. Range 5 to 35.
+      example: 22
+
+set_hvac_mode:
+  description: Set operation mode for Adax heater - HVAC_MODE_HEAT or HVAC_MODE_OFF.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    hvac_mode:
+      description: New value of operation mode.
+      example: heat
+
+turn_on:
+  description: Turn heater on. Sets HVAC mode to HEAT.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+
+turn_off:
+  description: Turn heater off. Sets HVAC mode to OFF.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"

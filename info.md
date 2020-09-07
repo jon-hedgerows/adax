@@ -1,5 +1,5 @@
 # Adax WiFi Heater Integration
-A custom component for Home Assistant to integrate with Adax WiFi heaters.
+A custom component for Home Assistant to integrate Adax WiFi heaters.
 See [Adax](https://adax.no/en/wi-fi/) for compatible heaters.
 
 **Requirement:** You must have your heater linked to the ADAX WiFi app.
@@ -17,4 +17,4 @@ climate:
 ```
 
 # Documentation
-Please visit the [GitHub Repository](https://github.com/jon-hedgerows/adax) for full documentation.
+There is no documentation, yet.  Please visit the [GitHub Repository](https://github.com/jon-hedgerows/adax).
